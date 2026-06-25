@@ -1,49 +1,76 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 export default function App() {
-  const [status, setStatus] = useState("Ready to track");
-  // Hardcoded test profile for Person 1's branch foundation
-  const [studentProfile, setStudentProfile] = useState({ name: "Student_A", matric: "RUN/2026/001" });
+    const [status, setStatus] = useState("Ready to track");
+    const [studentName, setStudentName] = useState("");
 
-  useEffect(() => {
-    // Set up an automated sequence loop running every 5000ms (5 seconds)
-    const trackingInterval = setInterval(() => {
-      if (!navigator.geolocation) {
-        setStatus("Geolocation not supported");
-        return;
-      }
+    const sendLocation = () => {
+        if (!studentName.trim()) {
+            alert("Please enter your name first!");
+            return;
+        }
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          setStatus(`Tracking active. Last ping: ${new Date().toLocaleTimeString()}`);
+        if (!navigator.geolocation) {
+            setStatus("Geolocation not supported by this browser.");
+            return;
+        }
 
-          // Bundle parameters to send sequentially to your Java IP address
-          const payload = `${lat},${lng},${studentProfile.name},${studentProfile.matric}`;
+        setStatus("Getting location...");
 
-          fetch('http://10.95.238.190:8080/locate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: payload
-          })
-            .catch(err => console.error("Server connection lost. Is Ayo's Java app open?", err));
-        },
-        (error) => setStatus(`GPS Error: ${error.message}`),
-        { enableHighAccuracy: true }
-      );
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                setStatus(`Coordinates found: ${lat}, ${lng}. Sending to Java...`);
 
-    }, 5000);
+               
+                const payload = `${lat},${lng},${studentName}`;
 
-    // Clean up the loop if the component unmounts
-    return () => clearInterval(trackingInterval);
-  }, [studentProfile]);
+                
+                fetch('http://10.95.238.253:8080/locate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: payload
+                })
+                    .then(response => response.text())
+                    .then(data => {
+                        setStatus(`Success: Connected to Java Server!`);
+                    })
+                    .catch(err => {
+                        setStatus(`Connection failed: Check if Java app is running and IP is correct.`);
+                        console.error(err);
+                    });
+            },
+            (error) => {
+                setStatus(`Error getting GPS: ${error.message}`);
+            }
+        );
+    };
 
-  return (
-    <div style={{ textAlign: 'center', padding: '40px', fontFamily: 'sans-serif' }}>
-      <h2>Tracking Stream Engine (Active)</h2>
-      <p style={{ color: '#007bff', fontWeight: 'bold' }}>{status}</p>
-      <p>System broadcasting background packets to Java server every 5 seconds.</p>
-    </div>
-  );
+    return (
+        <div style={{ textAlign: 'center', padding: '50px', fontFamily: 'sans-serif' }}>
+            <h1>Classroom Direct Location Portal</h1>
+            <p>Enter your name and broadcast your live coordinate strings straight to the server.</p>
+
+            <div style={{ margin: '20px' }}>
+                <input
+                    type="text"
+                    placeholder="Enter Your Name"
+                    value={studentName}
+                    onChange={(e) => setStudentName(e.target.value)}
+                    style={{ padding: '10px', fontSize: '16px', width: '250px' }}
+                />
+            </div>
+
+            <button onClick={sendLocation} style={{ padding: '15px 30px', fontSize: '16px', cursor: 'pointer' }}>
+                Broadcast My Location
+            </button>
+
+            <p style={{ marginTop: '30px', fontWeight: 'bold', color: '#555' }}>
+                Status: <span style={{ color: '#007bff' }}>{status}</span>
+            </p>
+        </div>
+    );
 }
