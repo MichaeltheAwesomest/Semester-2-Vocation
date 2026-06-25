@@ -19,7 +19,6 @@ public class LiveMapTracker {
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
         
         server.createContext("/locate", new HttpHandler() {
-            @Override
             public void handle(HttpExchange exchange) throws IOException {
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
