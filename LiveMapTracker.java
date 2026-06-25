@@ -10,11 +10,9 @@ import java.awt.Desktop;
 
 public class LiveMapTracker {
 
-    // Advanced State management using Enums
     enum ServerMode { STANDBY, CAPTURING, MAP_LAUNCHED }
     private static ServerMode currentMode = ServerMode.STANDBY;
 
-    // Tracker variable to avoid spamming multiple browser tabs every 5 seconds
     private static String lastProcessedStamp = "";
 
     public static void main(String[] args) throws Exception {
@@ -38,7 +36,7 @@ public class LiveMapTracker {
                     InputStream is = exchange.getRequestBody();
                     String body = new String(is.readAllBytes());
                     
-                    // Parse parameters: lat, lng, name, matric
+                
                     String[] data = body.split(",");
                     String lat = data[0];
                     String lng = data[1];
@@ -49,13 +47,13 @@ public class LiveMapTracker {
                     System.out.println("Incoming Node Sync -> " + studentName + " (" + matricNo + ")");
                     System.out.println("Coordinates: Latitude " + lat + " | Longitude " + lng);
 
-                    // To prevent tab explosion: only launch the browser tab if the location coordinate values actually changed
+                  
                     String currentStamp = lat + "," + lng;
                     if (!currentStamp.equals(lastProcessedStamp)) {
                         lastProcessedStamp = currentStamp;
                         currentMode = ServerMode.MAP_LAUNCHED;
 
-                        // Native directional search query layout string for Google Maps
+                      
                         String googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=" + lat + "," + lng;
 
                         if (Desktop.isDesktopSupported()) {
